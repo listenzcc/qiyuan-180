@@ -23,8 +23,6 @@ import sys
 import subprocess
 from pathlib import Path
 
-root = Path('/nfs/nica-history-216/180/Context_learning/Context_learning_2024_clean_data')
-assert root.is_dir(), f'Invalid folder: {root}'
 
 
 # %% ---- 2025-04-15 ------------------------
@@ -34,9 +32,29 @@ def get_scruaf_folders():
     '''
     Get folders named as SCRUAF.
     '''
+    root = Path('/nfs/nica-history-216/180/Context_learning/Context_learning_2024_clean_data')
     output = subprocess.check_output(['find', root, '-type', 'd', '-name', 'FunImgSCRUAF'])
     found = [Path(e.decode()) for e in output.split(b'\n') if e]
     return found
+
+def get_ds_folders():
+    '''
+    Get folders named as *.ds
+    '''
+    root = Path('/nfs/nica-history-216/180/Context_learning/Context_learning_2024_raw_data')
+    output = subprocess.check_output(['find', root, '-type', 'd', '-name', '*_G25IA_*.ds'])
+    found = [Path(e.decode()) for e in output.split(b'\n') if e]
+    return found
+
+def get_ds_mrk_files(folder:Path):
+    '''
+    Get *.mat named files inside folder.
+
+    :param folder Path: The given folder.
+    :return list: The list of found files.
+    '''
+    files = list(folder.rglob('MarkerFile.mrk'))
+    return files
 
 def get_scruaf_nii_files(folder:Path):
     '''

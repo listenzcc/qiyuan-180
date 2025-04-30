@@ -46,6 +46,15 @@ def get_ds_folders():
     found = [Path(e.decode()) for e in output.split(b'\n') if e]
     return found
 
+def get_cnt_files():
+    '''
+    Get files named as sub*.cnt
+    '''
+    root = Path('/nfs/diskstation/DataStation/ChenXiaoyu/AAD/QY180')
+    output = subprocess.check_output(['find', root, '-type', 'f', '-name', 'sub*.cnt'])
+    found = [Path(e.decode()) for e in output.split(b'\n') if e]
+    return found
+
 def get_ds_mrk_files(folder:Path):
     '''
     Get *.mat named files inside folder.

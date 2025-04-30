@@ -18,11 +18,14 @@ Functions:
 
 # %% ---- 2025-04-16 ------------------------
 # Requirements and constants
+import mne
 import joblib
 import pandas as pd
 from loguru import logger
 from tqdm.auto import tqdm
-from util.file_trip import get_scruaf_folders, get_scruaf_nii_files, get_ds_folders, get_ds_mrk_files
+from util.file_trip import get_scruaf_folders, get_scruaf_nii_files
+from util.file_trip import get_ds_folders, get_ds_mrk_files
+from util.file_trip import get_cnt_files
 
 
 # %% ---- 2025-04-16 ------------------------
@@ -57,6 +60,52 @@ def this_get_ds_folders():
     finally:
         return folders
 
+def this_get_cnt_files():
+    filename = './cache/cnt_files.bin'
+    try:
+        files = joblib.load(filename)
+        logger.info(f'Using cached cnt files from {filename}.')
+    except:
+        logger.debug('Searching ds folders.')
+        files = get_cnt_files()
+        joblib.dump(files, filename)
+        logger.info(f'Saved cnt files: {filename}')
+    finally:
+        return files
+
+def this_get_table_eeg(files:list):
+    '''
+    Get file table from caching or searching.
+    '''
+    filename = './cache/table-eeg.pkl'
+    try:
+        table = pd.read_pickle(filename)
+        logger.info(f'Using cached table: {filename}')
+    except:
+        logger.debug('Searching cnt files.')
+        table = []
+        for file in tqdm(files, 'Appending tables'):
+            subject = file.parent.parent.name
+            session = 'AAD'
+            run = 'run1'
+            name = file.name
+            full = file
+            table.append((subject, session, run, name, full))
+        # Convert table into DataFrame
+        table = pd.DataFrame(table, columns=['subject', 'session', 'run', 'name', 'full'])
+
+        def count_length(p):
+            raw = mne.io.read_raw(p)
+            length = raw.duration
+            return length
+
+        table['length'] = table['full'].map(count_length)
+
+        table.to_pickle(filename)
+        logger.info(f'Saved table: {filename}.')
+    finally:
+        return table
+
 def this_get_table_fmri(folders:list):
     '''
     Get file table from caching or searching.
@@ -83,7 +132,6 @@ def this_get_table_fmri(folders:list):
     finally:
         return table
 
-import mne
 def this_get_table_meg(folders:list):
     filename = './cache/table-meg.pkl'
     try:
@@ -118,6 +166,7 @@ def this_get_table_meg(folders:list):
 # %% ---- 2025-04-16 ------------------------
 # Play ground
 folders_fmri = this_get_scruaf_folders()
+print(folders_fmri)
 table = this_get_table_fmri(folders_fmri)
 print(table)
 
@@ -126,12 +175,18 @@ print(folders_meg)
 table_meg = this_get_table_meg(folders_meg)
 print(table_meg)
 
+files_eeg = this_get_cnt_files()
+print(files_eeg)
+table_eeg = this_get_table_eeg(files_eeg)
+print(table_eeg)
+
+
 # %% ---- 2025-04-16 ------------------------
 # Pending
 if __name__ == '__main__':
     print(table)
     print(table_meg)
-    print(table_meg['length'].sum()/3600)
+    print(table_eeg)
 
 
 

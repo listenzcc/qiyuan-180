@@ -1,5 +1,5 @@
 """
-File: main-fmri.py
+File: main-eeg.py
 Author: Chuncheng Zhang
 Date: 2025-04-16
 Copyright & Email: chuncheng.zhang@ia.ac.cn
@@ -8,11 +8,6 @@ Purpose:
     UI application for the data view broad.
     The table has 5 columns:
     | subject | session | run | name | full |
-    subject: Sub_14_zhangyaxin_MEG_fMRI
-    session: Day_01_fMRI_localizer
-    run:     run_01 
-    name:    scruaf20231128_P07_ZhouK_D242_ZhangYaXin-0003-...
-    full:    /nfs/nica-history-216/180/Context_learning/Con...
 
 Functions:
     1. Requirements and constants
@@ -30,9 +25,7 @@ import nibabel as nib
 from nicegui import ui
 from rich import print
 
-from get_files import table
-
-
+from get_files import table_eeg as table
 
 # %% ---- 2025-04-16 ------------------------
 # Function and class
@@ -73,8 +66,7 @@ def update_level3():
     show_selection()
 
 def compute_df_time(df:pd.DataFrame, TR:float=2):
-    n = len(df)
-    n *= TR
+    n = df['length'].sum()
     if n > 3600:
         return f'{n/3600:.2f} hours'
     elif n > 60:
@@ -187,7 +179,11 @@ def show_selection():
         if selected['run']:
             ui.label('Run level')
             df = pd.DataFrame()
-            df['path'] = data['full'].map(lambda e: e.as_posix())
+
+            if len(data) == 1:
+                df['path'] = [e.as_posix() for e in list(data.iloc[0]['full'].parent.iterdir())]
+            else:
+                df['path'] = data['full'].map(lambda e: e.as_posix())
             # df['stat'] = data['full'].map(lambda e: f'{e.stat()}')
             df = df.sort_values('path')
             df.index = range(len(df))
@@ -258,7 +254,7 @@ with ui.row().classes('w-full p-4 bg-gray-100 rounded-lg items-center'):
 display_area = ui.column().classes('w-full p-4 mt-4 border-2 rounded-lg min-h-64')
 
 show_selection()
-ui.run()
+ui.run(port=8082)
 
 # %% ---- 2025-04-16 ------------------------
 # Play ground

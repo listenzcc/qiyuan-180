@@ -8,11 +8,6 @@ Purpose:
     UI application for the data view broad.
     The table has 5 columns:
     | subject | session | run | name | full |
-    subject: Sub_14_zhangyaxin_MEG_fMRI
-    session: Day_01_fMRI_localizer
-    run:     run_01 
-    name:    scruaf20231128_P07_ZhouK_D242_ZhangYaXin-0003-...
-    full:    /nfs/nica-history-216/180/Context_learning/Con...
 
 Functions:
     1. Requirements and constants
@@ -31,8 +26,6 @@ from nicegui import ui
 from rich import print
 
 from get_files import table_meg as table
-
-
 
 # %% ---- 2025-04-16 ------------------------
 # Function and class
@@ -71,9 +64,6 @@ def update_level3():
     select_level3.value = None
     display_area.clear()
     show_selection()
-
-import mne
-from tqdm.auto import tqdm
 
 def compute_df_time(df:pd.DataFrame, TR:float=2):
     n = df['length'].sum()
@@ -183,7 +173,8 @@ def show_selection():
 
     with display_area:
         ui.label(f"Selection: {selected}").classes('text-sm text-gray-500')
-        ui.label(f'Files: {len(data)} | {compute_df_time(data)}').classes('text-lg text-red-500')
+        n_subjects = len(data['subject'].unique())
+        ui.label(f'Subjects: {n_subjects} | Files: {len(data)} | {compute_df_time(data)}').classes('text-lg text-red-500')
 
         if selected['run']:
             ui.label('Run level')
